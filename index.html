@@ -62,10 +62,6 @@
     justify-content: center;
     font-weight: 700;
   }
-  .menu-item.done .menu-number {
-    background: rgba(52, 211, 153, 0.2);
-    color: var(--reality);
-  }
   .menu-text { flex: 1; }
   .menu-title { font-weight: 600; font-size: 1rem; }
   .menu-status { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
@@ -138,9 +134,9 @@
   }
   .feedback-label { font-weight: 700; display: block; margin-bottom: 4px; }
 
-  .btn-row { display: flex; gap: 10px; margin-top: 18px; }
+  .btn-row { margin-top: 18px; display: none; }
   .action-btn {
-    flex: 1;
+    width: 100%;
     padding: 14px 0;
     border: none;
     border-radius: 12px;
@@ -149,7 +145,12 @@
     cursor: pointer;
   }
   .primary-btn { background: var(--accent); color: #0f172a; }
-  .secondary-btn { background: #334155; color: var(--text); }
+
+  /* Claim page */
+  .claim-card { text-align: center; display: none; }
+  .claim-icon { font-size: 3.5rem; margin-bottom: 8px; }
+  .claim-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+  .claim-text { color: var(--muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; }
 
   .hidden { display: none; }
 </style>
@@ -162,7 +163,7 @@
   <!-- MENU -->
   <div class="card" id="menuCard">
     <div class="menu-list" id="menuList"></div>
-    <div class="menu-summary" id="menuSummary"></div>
+    <div class="menu-summary" id="menuSummary">Pick a question to get started.</div>
   </div>
 
   <!-- QUIZ -->
@@ -181,10 +182,16 @@
       <span class="feedback-label" id="feedbackLabel"></span>
       <span id="feedbackText"></span>
     </div>
-    <div class="btn-row">
-      <button class="action-btn secondary-btn" onclick="backToMenu()">Back to menu</button>
-      <button class="action-btn primary-btn hidden" id="nextBtn" onclick="goToNextUnanswered()">Next question</button>
+    <div class="btn-row" id="btnRow">
+      <button class="action-btn primary-btn" onclick="showClaimPage()">Next</button>
     </div>
+  </div>
+
+  <!-- CLAIM PAGE -->
+  <div class="card claim-card" id="claimCard">
+    <div class="claim-icon">🎁</div>
+    <div class="claim-title">Please claim your goodie</div>
+    <div class="claim-text">Thanks for taking part! Show this screen to collect your goodie.</div>
   </div>
 </div>
 
@@ -228,31 +235,23 @@ const questions = [
 ];
 
 let currentIndex = null;
-const state = questions.map(() => ({ answered: false, correct: null }));
 
 function renderMenu() {
   const list = document.getElementById('menuList');
   list.innerHTML = '';
   questions.forEach((q, i) => {
     const item = document.createElement('div');
-    item.className = 'menu-item' + (state[i].answered ? ' done' : '');
+    item.className = 'menu-item';
     item.onclick = () => openQuestion(i);
     item.innerHTML = `
-      <div class="menu-number">${state[i].answered ? (state[i].correct ? '✓' : '✗') : (i + 1)}</div>
+      <div class="menu-number">${i + 1}</div>
       <div class="menu-text">
         <div class="menu-title">${q.topic}</div>
-        <div class="menu-status">${state[i].answered ? (state[i].correct ? 'Answered correctly' : 'Answered — review it') : 'Not answered yet'}</div>
+        <div class="menu-status">Tap to answer</div>
       </div>
     `;
     list.appendChild(item);
   });
-
-  const answeredCount = state.filter(s => s.answered).length;
-  const correctCount = state.filter(s => s.correct).length;
-  const summary = document.getElementById('menuSummary');
-  summary.textContent = answeredCount === 0
-    ? 'Pick a question to get started.'
-    : `Score so far: ${correctCount} / ${answeredCount} answered`;
 }
 
 function openQuestion(i) {
@@ -266,34 +265,20 @@ function openQuestion(i) {
   document.getElementById('scenarioText').textContent = q.scenario;
   document.getElementById('statement').textContent = q.statement;
   document.getElementById('feedback').style.display = 'none';
-  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('btnRow').style.display = 'none';
 
   const mythBtn = document.getElementById('mythBtn');
   const realityBtn = document.getElementById('realityBtn');
   mythBtn.className = 'choice-btn btn-myth';
   realityBtn.className = 'choice-btn btn-reality';
-
-  if (state[i].answered) {
-    showFeedback(i, state[i].correct ? q.answer : (q.answer === 'myth' ? 'reality' : 'myth'), true);
-  } else {
-    mythBtn.disabled = false;
-    realityBtn.disabled = false;
-  }
+  mythBtn.disabled = false;
+  realityBtn.disabled = false;
 }
 
 function selectAnswer(choice) {
   const i = currentIndex;
-  if (state[i].answered) return;
-
   const q = questions[i];
-  state[i].answered = true;
-  state[i].correct = (choice === q.answer);
 
-  showFeedback(i, choice, false);
-}
-
-function showFeedback(i, choice, reopened) {
-  const q = questions[i];
   const mythBtn = document.getElementById('mythBtn');
   const realityBtn = document.getElementById('realityBtn');
   mythBtn.disabled = true;
@@ -305,37 +290,19 @@ function showFeedback(i, choice, reopened) {
   correctBtn.classList.add('correct');
   if (choice !== q.answer) chosenBtn.classList.add('wrong');
 
+  const wasCorrect = choice === q.answer;
   const feedback = document.getElementById('feedback');
-  const label = document.getElementById('feedbackLabel');
-  const text = document.getElementById('feedbackText');
-  const wasCorrect = state[i].correct;
-  label.textContent = (wasCorrect ? "Correct — " : "Not quite — ") + "It's a " + q.answer.toUpperCase() + ".";
-  text.textContent = q.explanation;
+  document.getElementById('feedbackLabel').textContent =
+    (wasCorrect ? "Correct — " : "Not quite — ") + "It's a " + q.answer.toUpperCase() + ".";
+  document.getElementById('feedbackText').textContent = q.explanation;
   feedback.style.display = 'block';
 
-  const hasNext = questions.some((_, idx) => !state[idx].answered);
-  const nextBtn = document.getElementById('nextBtn');
-  if (hasNext && !reopened) {
-    nextBtn.classList.remove('hidden');
-  } else {
-    nextBtn.classList.add('hidden');
-  }
+  document.getElementById('btnRow').style.display = 'block';
 }
 
-function goToNextUnanswered() {
-  const nextIdx = state.findIndex(s => !s.answered);
-  if (nextIdx === -1) {
-    backToMenu();
-  } else {
-    openQuestion(nextIdx);
-  }
-}
-
-function backToMenu() {
-  currentIndex = null;
+function showClaimPage() {
   document.getElementById('quizCard').classList.add('hidden');
-  document.getElementById('menuCard').classList.remove('hidden');
-  renderMenu();
+  document.getElementById('claimCard').style.display = 'block';
 }
 
 renderMenu();
