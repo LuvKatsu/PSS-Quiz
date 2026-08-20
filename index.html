@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Myth or Reality? Patient Safety Quiz</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #38bdf8;
+    --myth: #f87171;
+    --reality: #34d399;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(160deg, var(--bg), #1e293b);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .container {
+    width: 100%;
+    max-width: 480px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+  .progress-bar {
+    background: #334155;
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .progress-fill {
+    background: var(--accent);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .topic-tag {
+    display: inline-block;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .statement {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .choices {
+    display: flex;
+    gap: 12px;
+  }
+  .choice-btn {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+  .choice-btn:active { transform: scale(0.97); }
+  .btn-myth {
+    background: rgba(248, 113, 113, 0.15);
+    color: var(--myth);
+  }
+  .btn-reality {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--reality);
+  }
+  .choice-btn:disabled { cursor: default; opacity: 0.6; }
+  .choice-btn.correct {
+    border-color: var(--reality);
+    background: rgba(52, 211, 153, 0.25);
+  }
+  .choice-btn.wrong {
+    border-color: var(--myth);
+    background: rgba(248, 113, 113, 0.25);
+  }
+  .feedback {
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #0f172a;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text);
+    display: none;
+  }
+  .feedback-label {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .next-btn {
+    margin-top: 18px;
+    width: 100%;
+    padding: 14px 0;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: none;
+  }
+  .results {
+    text-align: center;
+    display: none;
+  }
+  .results .score {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 12px 0;
+  }
+  .results p { color: var(--muted); line-height: 1.6; }
+  .restart-btn {
+    margin-top: 20px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Myth or Reality?</h1>
+  <p class="subtitle">Patient Safety Edition</p>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="card" id="quizCard">
+    <div class="topic-tag" id="topicTag"></div>
+    <div class="statement" id="statement"></div>
+    <div class="choices">
+      <button class="choice-btn btn-myth" id="mythBtn" onclick="selectAnswer('myth')">Myth</button>
+      <button class="choice-btn btn-reality" id="realityBtn" onclick="selectAnswer('reality')">Reality</button>
+    </div>
+    <div class="feedback" id="feedback">
+      <span class="feedback-label" id="feedbackLabel"></span>
+      <span id="feedbackText"></span>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next</button>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <p>Your score</p>
+    <div class="score" id="scoreDisplay"></div>
+    <p id="resultsMessage"></p>
+    <button class="restart-btn" onclick="restartQuiz()">Try Again</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    topic: "Alarm Fatigue",
+    statement: "Turning down alarm volume or silencing alarms is a safe way to reduce alarm fatigue.",
+    answer: "myth",
+    explanation: "Lowering volume or silencing alarms to cope with fatigue can cause staff to miss a genuinely critical alert. The safer approach is customizing alarm thresholds to the patient and reducing non-actionable alarms in the first place."
+  },
+  {
+    topic: "Look-Alike Products",
+    statement: "Look-alike, sound-alike (LASA) products only confuse new or inexperienced staff.",
+    answer: "myth",
+    explanation: "LASA mix-ups happen to experienced staff too, especially under time pressure, fatigue, or during interruptions. Distinct packaging, labeling, and storage separation reduce risk for everyone, not just newcomers."
+  },
+  {
+    topic: "Workarounds",
+    statement: "A workaround that skips a safety check is usually harmless if it saves time and 'nothing bad has happened yet.'",
+    answer: "myth",
+    explanation: "Workarounds bypass a control that was put there for a reason. Repeated 'success' just means the risk hasn't caught up yet — the safety check should be fixed or replaced, not routinely skipped."
+  },
+  {
+    topic: "Handovers",
+    statement: "A verbal handover alone gives the next team everything they need to keep the patient safe.",
+    answer: "myth",
+    explanation: "Verbal-only handovers rely on memory and are easily disrupted by interruptions or ambiguity. Structured, written or documented handovers (e.g. SBAR) reduce the chance that critical details get lost."
+  },
+  {
+    topic: "Interruptions",
+    statement: "Interruptions during tasks like medication administration meaningfully increase the risk of error.",
+    answer: "reality",
+    explanation: "Research consistently shows interruptions during high-focus tasks increase the chance of errors and omissions, which is why practices like 'no interruption zones' during medication rounds exist."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+
+function loadQuestion() {
+  const q = questions[current];
+  document.getElementById('topicTag').textContent = q.topic;
+  document.getElementById('statement').textContent = q.statement;
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+  answered = false;
+
+  const mythBtn = document.getElementById('mythBtn');
+  const realityBtn = document.getElementById('realityBtn');
+  mythBtn.disabled = false;
+  realityBtn.disabled = false;
+  mythBtn.className = 'choice-btn btn-myth';
+  realityBtn.className = 'choice-btn btn-reality';
+
+  document.getElementById('progressFill').style.width = (current / questions.length * 100) + '%';
+}
+
+function selectAnswer(choice) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const mythBtn = document.getElementById('mythBtn');
+  const realityBtn = document.getElementById('realityBtn');
+  mythBtn.disabled = true;
+  realityBtn.disabled = true;
+
+  const correctBtn = q.answer === 'myth' ? mythBtn : realityBtn;
+  const chosenBtn = choice === 'myth' ? mythBtn : realityBtn;
+
+  correctBtn.classList.add('correct');
+  if (choice !== q.answer) {
+    chosenBtn.classList.add('wrong');
+  } else {
+    score++;
+  }
+
+  const feedback = document.getElementById('feedback');
+  const label = document.getElementById('feedbackLabel');
+  const text = document.getElementById('feedbackText');
+  label.textContent = (choice === q.answer ? "Correct — " : "Not quite — ") + "It's a " + q.answer.toUpperCase() + ".";
+  text.textContent = q.explanation;
+  feedback.style.display = 'block';
+
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('nextBtn').textContent = current === questions.length - 1 ? 'See Results' : 'Next';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('quizCard').style.display = 'none';
+  document.getElementById('resultsCard').style.display = 'block';
+  document.getElementById('scoreDisplay').textContent = score + ' / ' + questions.length;
+
+  let msg = '';
+  if (score === questions.length) msg = "Perfect score! You've got a sharp eye for safety myths.";
+  else if (score >= questions.length - 1) msg = "Great job — just one to review.";
+  else if (score >= questions.length / 2) msg = "Good start — worth revisiting a couple of these.";
+  else msg = "These myths are trickier than they look — review the explanations above.";
+  document.getElementById('resultsMessage').textContent = msg;
+}
+
+function restartQuiz() {
+  current = 0;
+  score = 0;
+  document.getElementById('resultsCard').style.display = 'none';
+  document.getElementById('quizCard').style.display = 'block';
+  loadQuestion();
+}
+
+loadQuestion();
+</script>
+</body>
+</html>
