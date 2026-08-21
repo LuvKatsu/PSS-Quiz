@@ -335,6 +335,32 @@ function selectAnswer(choice) {
   document.getElementById('emailBox').style.display = 'block';
 }
 
+function handleNext() {
+  const emailInput = document.getElementById('emailInput');
+  const emailError = document.getElementById('emailError');
+  const email = emailInput.value.trim();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailPattern.test(email)) {
+    emailInput.classList.add('invalid');
+    emailError.style.display = 'block';
+    return;
+  }
+  emailInput.classList.remove('invalid');
+  emailError.style.display = 'none';
+
+  const q = questions[currentIndex];
+  const subject = encodeURIComponent('Quiz completed: ' + q.topic);
+  const body = encodeURIComponent(
+    'Quiz completed by: ' + email + '\n' +
+    'Topic: ' + q.topic + '\n' +
+    'Question: ' + q.statement
+  );
+  window.location.href = 'mailto:Nicolette.chhua.jc@sgh.com.sg?subject=' + subject + '&body=' + body;
+
+  showClaimPage();
+}
+
 function showClaimPage() {
   document.getElementById('quizCard').classList.add('hidden');
   document.getElementById('claimCard').style.display = 'block';
