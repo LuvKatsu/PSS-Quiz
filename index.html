@@ -134,6 +134,31 @@
   }
   .feedback-label { font-weight: 700; display: block; margin-bottom: 4px; }
 
+  .email-box { margin-top: 18px; display: none; }
+  .email-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .email-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 2px solid #334155;
+    background: #0f172a;
+    color: var(--text);
+    font-size: 1rem;
+  }
+  .email-input:focus { outline: none; border-color: var(--accent); }
+  .email-input.invalid { border-color: var(--myth); }
+  .email-error {
+    display: none;
+    color: var(--myth);
+    font-size: 0.8rem;
+    margin-top: 6px;
+  }
+
   .btn-row { margin-top: 18px; display: none; }
   .action-btn {
     width: 100%;
@@ -182,8 +207,13 @@
       <span class="feedback-label" id="feedbackLabel"></span>
       <span id="feedbackText"></span>
     </div>
+    <div class="email-box" id="emailBox">
+      <label class="email-label" for="emailInput">Enter your work email to claim your goodie</label>
+      <input type="email" id="emailInput" class="email-input" placeholder="you@sgh.com.sg" />
+      <div class="email-error" id="emailError">Please enter a valid email address.</div>
+    </div>
     <div class="btn-row" id="btnRow">
-      <button class="action-btn primary-btn" onclick="showClaimPage()">Next</button>
+      <button class="action-btn primary-btn" onclick="handleNext()">Next</button>
     </div>
   </div>
 
@@ -266,6 +296,10 @@ function openQuestion(i) {
   document.getElementById('statement').textContent = q.statement;
   document.getElementById('feedback').style.display = 'none';
   document.getElementById('btnRow').style.display = 'none';
+  document.getElementById('emailBox').style.display = 'none';
+  document.getElementById('emailInput').value = '';
+  document.getElementById('emailInput').classList.remove('invalid');
+  document.getElementById('emailError').style.display = 'none';
 
   const mythBtn = document.getElementById('mythBtn');
   const realityBtn = document.getElementById('realityBtn');
@@ -298,6 +332,7 @@ function selectAnswer(choice) {
   feedback.style.display = 'block';
 
   document.getElementById('btnRow').style.display = 'block';
+  document.getElementById('emailBox').style.display = 'block';
 }
 
 function showClaimPage() {
