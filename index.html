@@ -335,7 +335,7 @@ function selectAnswer(choice) {
   document.getElementById('emailBox').style.display = 'block';
 }
 
-function handleNext() {
+async function handleNext() {
   const emailInput = document.getElementById('emailInput');
   const emailError = document.getElementById('emailError');
   const email = emailInput.value.trim();
@@ -350,14 +350,27 @@ function handleNext() {
   emailError.style.display = 'none';
 
   const q = questions[currentIndex];
-  const subject = encodeURIComponent('Quiz completed: ' + q.topic);
-  const body = encodeURIComponent(
-    'Quiz completed by: ' + email + '\n' +
-    'Topic: ' + q.topic + '\n' +
-    'Question: ' + q.statement
-  );
-  window.location.href = 'mailto:Nicolette.chhua.jc@sgh.com.sg?subject=' + subject + '&body=' + body;
+  const nextBtn = document.querySelector('#btnRow .action-btn');
+  nextBtn.disabled = true;
+  nextBtn.textContent = 'Sending...';
 
+  try {
+    await fetch('https://formspree.io/f/xzepoked', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email,
+        topic: q.topic,
+        question: q.statement,
+        _subject: 'Quiz completed: ' + q.topic
+      })
+    });
+  } catch (err) {
+    console.error('Formspree submission failed:', err);
+  }
+
+  nextBtn.disabled = false;
+  nextBtn.textContent = 'Next';
   showClaimPage();
 }
 
