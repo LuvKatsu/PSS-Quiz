@@ -210,7 +210,7 @@
     <div class="email-box" id="emailBox">
       <label class="email-label" for="emailInput">Enter your work email to claim your goodie</label>
       <input type="email" id="emailInput" class="email-input" placeholder="you@sgh.com.sg" />
-      <div class="email-error" id="emailError">Please enter a valid email address.</div>
+      <div class="email-error" id="emailError">Please enter a valid work email ending in @sgh.com.sg.</div>
     </div>
     <div class="btn-row" id="btnRow">
       <button class="action-btn primary-btn" onclick="handleNext()">Next</button>
@@ -339,7 +339,7 @@ async function handleNext() {
   const emailInput = document.getElementById('emailInput');
   const emailError = document.getElementById('emailError');
   const email = emailInput.value.trim();
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailPattern = /^[^\s@]+@sgh\.com\.sg$/i;
 
   if (!emailPattern.test(email)) {
     emailInput.classList.add('invalid');
